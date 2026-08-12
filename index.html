@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup Bluff — Solo</title>
+<style>
+  :root{
+    --pitch:#0d2b1f;
+    --pitch-line:#1c4a35;
+    --paper:#f3ede0;
+    --gold:#d9a441;
+    --gold-dim:#8a6e33;
+    --red:#b23a3a;
+    --green:#3f8a5b;
+    --ink:#f3ede0;
+    --ink-dim:#a9baaf;
+    --card:#123a2a;
+    --card-border:#2a5c43;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(0deg, transparent 0 78px, var(--pitch-line) 78px 80px),
+      var(--pitch);
+    color:var(--ink);
+    font-family: 'Georgia', 'Iowan Old Style', serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:18px 16px 80px;}
+  header.top{
+    display:flex;justify-content:space-between;align-items:center;
+    border-bottom:2px solid var(--gold-dim);
+    padding-bottom:12px;margin-bottom:20px;flex-wrap:wrap;gap:10px;
+  }
+  h1.logo{
+    font-family:'Trebuchet MS', sans-serif;
+    letter-spacing:2px;text-transform:uppercase;
+    font-size:1.3rem;margin:0;color:var(--gold);
+  }
+  h1.logo small{display:block;font-size:0.6rem;letter-spacing:3px;color:var(--ink-dim);font-weight:normal;}
+  .resources{display:flex;gap:14px;font-family:'Trebuchet MS', sans-serif;font-size:0.85rem;align-items:center;}
+  .res-pill{
+    background:var(--card);border:1px solid var(--card-border);
+    padding:6px 12px;border-radius:20px;
+  }
+  .res-pill b{color:var(--gold);}
+  button.restart-btn{
+    background:none;border:1px solid var(--red);color:var(--red);
+    padding:5px 10px;border-radius:6px;font-family:'Trebuchet MS',sans-serif;
+    font-size:0.75rem;cursor:pointer;
+  }
+  button.restart-btn:hover{background:var(--red);color:var(--paper);}
+
+  .panel{
+    background:var(--card);border:1px solid var(--card-border);
+    border-radius:10px;padding:20px 22px;margin-bottom:18px;
+  }
+  .panel h2{
+    font-family:'Trebuchet MS', sans-serif;color:var(--gold);
+    margin-top:0;font-size:1.1rem;letter-spacing:1px;text-transform:uppercase;
+    border-bottom:1px solid var(--card-border);padding-bottom:8px;
+  }
+  p{line-height:1.55;}
+  .lede{color:var(--ink-dim);font-size:0.95rem;}
+
+  .btn{
+    font-family:'Trebuchet MS', sans-serif;
+    background:var(--gold);color:#231a08;border:none;
+    padding:10px 18px;border-radius:6px;font-weight:bold;
+    cursor:pointer;font-size:0.92rem;margin:4px 6px 4px 0;
+    transition:transform .1s;
+  }
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.08);}
+  .btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
+  .btn.secondary{background:transparent;border:1px solid var(--gold-dim);color:var(--gold);}
+  .btn.danger{background:var(--red);color:var(--paper);}
+  .btn.small{padding:6px 12px;font-size:0.8rem;}
+
+  .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+  .nation-card{
+    background:#0f2f22;border:1px solid var(--card-border);border-radius:8px;
+    padding:10px 12px;cursor:pointer;transition:.15s;
+  }
+  .nation-card:hover{border-color:var(--gold);}
+  .nation-card.selected{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold) inset;}
+  .nation-card .stars{color:var(--gold);letter-spacing:1px;font-size:0.85rem;}
+  .nation-card .name{font-size:1rem;margin-top:2px;}
+
+  .groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;}
+  .group-box{background:#0f2f22;border:1px solid var(--card-border);border-radius:8px;padding:10px 12px;}
+  .group-box h3{margin:0 0 6px;font-family:'Trebuchet MS',sans-serif;font-size:0.85rem;color:var(--gold);
+    display:flex;justify-content:space-between;}
+  .group-box h3 span{color:var(--ink-dim);font-weight:normal;font-size:0.72rem;}
+  .team-row{
+    display:flex;justify-content:space-between;font-size:0.85rem;
+    padding:3px 6px;border-radius:4px;margin-bottom:2px;
+  }
+  .team-row.green{background:rgba(63,138,91,0.35);}
+  .team-row.red{background:rgba(178,58,58,0.35);}
+  .team-row.identity{outline:1px solid var(--gold);}
+  .team-row .flag-tag{font-size:0.68rem;color:var(--ink-dim);}
+
+  .hand-list{display:flex;flex-direction:column;gap:8px;}
+  .hand-card{
+    display:flex;justify-content:space-between;align-items:center;
+    background:#0f2f22;border:1px solid var(--card-border);border-radius:8px;padding:9px 12px;
+  }
+  .hand-card .info{font-size:0.9rem;}
+  .hand-card .info .grp{color:var(--ink-dim);font-size:0.75rem;}
+  .tag-soutien{color:var(--green);font-weight:bold;}
+  .tag-sabotage{color:var(--red);font-weight:bold;}
+
+  .money-track{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
+  .money-chip{
+    background:#0f2f22;border:1px solid var(--gold-dim);border-radius:6px;
+    padding:8px 14px;font-size:1.1rem;color:var(--gold);font-weight:bold;
+  }
+  .objective-bar{
+    height:14px;background:#0a2318;border-radius:7px;overflow:hidden;border:1px solid var(--card-border);margin:10px 0;
+  }
+  .objective-fill{height:100%;background:var(--gold);transition:width .3s;}
+  .objective-fill.over{background:var(--red);}
+
+  .vs-row{display:flex;align-items:center;justify-content:space-around;gap:14px;margin:14px 0;flex-wrap:wrap;}
+  .vs-side{text-align:center;background:#0f2f22;border:1px solid var(--card-border);border-radius:8px;padding:14px 20px;min-width:150px;}
+  .vs-side .who{font-size:0.75rem;color:var(--ink-dim);text-transform:uppercase;letter-spacing:1px;}
+  .vs-side .nm{font-size:1.15rem;margin:4px 0;}
+  .vs-side .tot{font-size:1.7rem;color:var(--gold);font-weight:bold;}
+  .vs-mid{font-family:'Trebuchet MS',sans-serif;font-size:0.85rem;color:var(--ink-dim);}
+
+  .action-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:12px;border-top:1px dashed var(--card-border);}
+  .action-btn{
+    background:#0f2f22;border:1px solid var(--gold-dim);color:var(--ink);
+    padding:8px 12px;border-radius:6px;font-family:'Trebuchet MS',sans-serif;font-size:0.78rem;
+    cursor:pointer;text-align:left;max-width:220px;
+  }
+  .action-btn b{display:block;color:var(--gold);font-size:0.82rem;}
+  .action-btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+  .score-table{width:100%;border-collapse:collapse;margin-top:10px;}
+  .score-table td,.score-table th{padding:8px 10px;border-bottom:1px solid var(--card-border);text-align:left;}
+  .score-table th{color:var(--ink-dim);font-family:'Trebuchet MS',sans-serif;font-size:0.78rem;text-transform:uppercase;}
+  .score-table td.num{text-align:right;color:var(--gold);font-weight:bold;}
+  .score-total td{font-size:1.3rem;color:var(--gold);border-top:2px solid var(--gold-dim);border-bottom:none;}
+
+  .log-line{font-size:0.85rem;color:var(--ink-dim);margin:2px 0;}
+  .note{
+    font-size:0.78rem;color:var(--ink-dim);border-left:2px solid var(--gold-dim);
+    padding:6px 10px;margin-top:10px;background:rgba(0,0,0,0.15);
+  }
+  .stage-track{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;}
+  .stage-pill{
+    font-family:'Trebuchet MS',sans-serif;font-size:0.68rem;letter-spacing:0.5px;
+    padding:4px 10px;border-radius:12px;background:#0f2f22;border:1px solid var(--card-border);color:var(--ink-dim);
+  }
+  .stage-pill.active{border-color:var(--gold);color:var(--gold);}
+  .stage-pill.done{border-color:var(--green);color:var(--green);}
+  .stage-pill.dead{border-color:var(--red);color:var(--red);}
+
+  input[type=range]{width:100%;}
+  .invest-display{font-size:1.4rem;color:var(--gold);text-align:center;margin:6px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="logo">World Cup Bluff <small>Édition solo — jouable en ligne</small></h1>
+    <div class="resources" id="resourcesBar"></div>
+  </header>
+  <div id="app"></div>
+</div>
+
+<script>
+/* ============== DONNÉES ============== */
+const NATIONS_DATA = [
+  ["Espagne",5],["Argentine",5],["Angleterre",5],["France",5],["Norvège",5],["Belgique",5],["Maroc",5],
+  ["Suisse",4],["Mexique",4],["Colombie",4],["Brésil",4],["États-Unis",4],["Portugal",4],["Canada",4],["Égypte",4],["Paraguay",4],["Pays-Bas",4],
+  ["Allemagne",3],["Côte d'Ivoire",3],["Croatie",3],["Japon",3],["Australie",3],["RD Congo",3],["Ghana",3],["Équateur",3],["Afrique du Sud",3],["Suède",3],["Autriche",3],["Bosnie-Herzégovine",3],["Algérie",3],["Sénégal",3],
+  ["Cap-Vert",2],["Iran",2],["Corée du Sud",2],["Turquie",2],["Écosse",2],["Uruguay",2],["Arabie saoudite",2],["République tchèque",2],["Nouvelle-Zélande",2],["Qatar",2],
+  ["Curaçao",1],["Panama",1],["Jordanie",1],["Haïti",1],["Ouzbékistan",1],["Tunisie",1],["Irak",1]
+];
+const STAR_BONUS = {1:0,2:1,3:2,4:3,5:4};
+const STAR_EQUITY = {1:8,2:6,3:4,4:2,5:0};
+const ROUND_POINTS = {poules:0,seizièmes:1,huitièmes:2,quarts:3,demies:5,finaliste:8,vainqueur:17};
+const ROUND_LABEL = {seizièmes:"Seizièmes",huitièmes:"Huitièmes",quarts:"Quarts",demies:"Demies",finale:"Finale",finaliste:"Finaliste",vainqueur:"Vainqueur"};
+const ORDER = ['seizièmes','huitièmes','quarts','demies','finale'];
+
+let G = {};
+
+/* ============== UTILITAIRES ============== */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function drawCardStars(){ return 1+Math.floor(Math.random()*5); }
+function roundIndexFor(name){ return ORDER.indexOf(name); }
+
+/* ============== SETUP ============== */
+function newGame(){
+  G = {};
+  G.nations = NATIONS_DATA.map((n,i)=>({id:i,name:n[0],stars:n[1]}));
+  const rankOrder = shuffle(G.nations.map(n=>n.id));
+  G.fifaRankOf = {};
+  rankOrder.forEach((id,idx)=>G.fifaRankOf[id]=idx);
+  buildGroups();
+  G.pa=25; G.pi=25;
+  G.actionsUsed = {coupBas:false, sursis:false, pari:false};
+  G.pariTarget=null;
+  G.candidateIds = shuffle(G.nations.map(n=>n.id)).slice(0,8);
+  G.stage='setup';
+  render();
+}
+
+function buildGroups(){
+  const pool = shuffle(G.nations.slice());
+  G.groups=[];
+  const letters='ABCDEFGHIJKL';
+  for(let g=0; g<12; g++){
+    const teams = pool.slice(g*4,g*4+4);
+    const type = g<8 ? '3v1r':'2v2r';
+    G.groups.push({letter:letters[g], type, teams, resolved:false, order:null, qualified:[], eliminated:[], soutienCount:0, sabotageCount:0});
+  }
+  G.nationGroup = {};
+  G.groups.forEach(gr=>gr.teams.forEach(t=>G.nationGroup[t.id]=gr));
+}
+
+function chooseIdentity(id){
+  G.identity = G.nations.find(n=>n.id===id);
+  G.hand = G.candidateIds.filter(cid=>cid!==id).map(cid=>({nation:G.nations.find(n=>n.id===cid), played:null}));
+  G.stage='poules';
+  render();
+}
+
+/* ============== MANCHE 1 : POULES ============== */
+function getCardPlayed(nationId){
+  const c = G.hand.find(h=>h.nation.id===nationId);
+  return c ? c.played : null;
+}
+function playCard(handIndex, type){
+  const card = G.hand[handIndex];
+  const group = G.nationGroup[card.nation.id];
+  const maxGreen = group.type==='3v1r'?3:2;
+  const maxRed = group.type==='3v1r'?1:2;
+  if(card.played===type){
+    if(type==='soutien') group.soutienCount--; else group.sabotageCount--;
+    card.played=null; render(); return;
+  }
+  if(card.played==='soutien') group.soutienCount--;
+  if(card.played==='sabotage') group.sabotageCount--;
+  if(type==='soutien' && group.soutienCount>=maxGreen){ alert("Plus de place verte disponible dans ce groupe."); card.played=null; render(); return; }
+  if(type==='sabotage' && group.sabotageCount>=maxRed){ alert("Plus de place rouge disponible dans ce groupe."); card.played=null; render(); return; }
+  card.played=type;
+  if(type==='soutien') group.soutienCount++; else group.sabotageCount++;
+  render();
+}
+function resolveGroup(gr){
+  const byStars=(a,b)=> b.stars-a.stars || G.fifaRankOf[a.id]-G.fifaRankOf[b.id];
+  const soutien = gr.teams.filter(t=>getCardPlayed(t.id)==='soutien').sort(byStars);
+  const sabotage = gr.teams.filter(t=>getCardPlayed(t.id)==='sabotage').sort(byStars);
+  const middle = gr.teams.filter(t=>!getCardPlayed(t.id)).sort(byStars);
+  gr.order = [...soutien, ...middle, ...sabotage];
+  const maxGreen = gr.type==='3v1r'?3:2;
+  gr.qualified = gr.order.slice(0,maxGreen);
+  gr.eliminated = gr.order.slice(maxGreen);
+  gr.resolved=true;
+}
+function resolveAllPoules(){
+  G.groups.forEach(resolveGroup);
+  G.qualified=[]; G.eliminatedPoules=[];
+  G.groups.forEach(gr=>{ G.qualified.push(...gr.qualified); G.eliminatedPoules.push(...gr.eliminated); });
+  G.eliminatedPool = G.eliminatedPoules.slice();
+  G.identityQualified = G.qualified.some(n=>n.id===G.identity.id);
+  G.opponentPool = G.qualified.filter(n=>n.id!==G.identity.id);
+  if(G.identityQualified){ G.stage='postpoules'; } else { G.furthestReached='poules'; G.stage='eliminated'; }
+  render();
+}
+
+/* ============== ACTIONS UNIQUES ============== */
+function useCoupBas(oppId){
+  G.opponentPool = G.opponentPool.filter(n=>n.id!==oppId);
+  G.actionsUsed.coupBas = true;
+  render();
+}
+function setPari(target){
+  G.pariTarget = target;
+  G.actionsUsed.pari = true;
+  render();
+}
+
+/* ============== ADVERSAIRES ============== */
+function removeFromPool(id){ G.opponentPool = G.opponentPool.filter(n=>n.id!==id); }
+function pickOpponent(roundIdx){
+  if(G.opponentPool.length===0) return {id:-1,name:"Sélection FIFA",stars:3};
+  const weighted = G.opponentPool.map(n=>({n, w: Math.pow(n.stars+1, roundIdx+1)}));
+  const total = weighted.reduce((s,w)=>s+w.w,0);
+  let r = Math.random()*total;
+  for(const w of weighted){ r-=w.w; if(r<=0){ removeFromPool(w.n.id); return w.n; } }
+  const last = weighted[weighted.length-1].n; removeFromPool(last.id); return last;
+}
+
+/* ============== NAVIGATION MANCHE 2 ============== */
+function startRound(name){
+  G.stage=name;
+  if(name==='seizièmes'){
+    G.opponent = pickOpponent(0);
+    G.duel = null;
+  } else if(name==='huitièmes' || name==='quarts'){
+    startMoneyTime(name);
+  } else if(name==='demies' || name==='finale'){
+    startMises(name);
+  }
+  render();
+}
+function goToNextRound(fromRound){
+  const idx = ORDER.indexOf(fromRound);
+  if(idx===ORDER.length-1){ G.furthestReached='vainqueur'; G.stage='score'; render(); return; }
+  startRound(ORDER[idx+1]);
+}
+function offerSursisOrEnd(roundName){
+  G.furthestReached = (roundName==='finale') ? 'finaliste' : roundName;
+  G.pendingRound = roundName;
+  const sursisEligible = ['seizièmes','huitièmes','quarts'].includes(roundName);
+  if(!G.actionsUsed.sursis && G.pa>=10 && sursisEligible){
+    G.stage='sursisOffer';
+  } else {
+    G.stage='eliminated';
+  }
+  render();
+}
+function useSursis(){
+  G.pa-=10; G.actionsUsed.sursis=true;
+  goToNextRound(G.pendingRound);
+}
+function declineSursis(){ G.stage='eliminated'; render(); }
+
+/* ============== SEIZIÈMES (tirage automatique) ============== */
+function playSeiziemes(){
+  let idCard,oppCard,idTotal,oppTotal,win;
+  while(true){
+    idCard=drawCardStars(); oppCard=drawCardStars();
+    idTotal=G.identity.stars+idCard; oppTotal=G.opponent.stars+oppCard;
+    if(idTotal!==oppTotal){ win = idTotal>oppTotal; break; }
+    if(G.identity.stars!==G.opponent.stars){ win = G.identity.stars>G.opponent.stars; break; }
+  }
+  G.duel = {idCard,oppCard,idTotal,oppTotal,win};
+  render();
+}
+function afterSeiziemes(){
+  if(G.duel.win) goToNextRound('seizièmes');
+  else offerSursisOrEnd('seizièmes');
+}
+
+/* ============== HUITIÈMES / QUARTS : MONEY TIME ============== */
+function startMoneyTime(roundName){
+  const cfg = roundName==='huitièmes' ? {obj:7,oppStop:5} : {obj:10,oppStop:7};
+  G.opponent = pickOpponent(roundIndexFor(roundName));
+  G.mt = {round:roundName, objective:cfg.obj, oppStopAt:cfg.oppStop, total:0, log:[], finished:false,
+    won:null, oppTotal:null, oppLog:[], peek:null, usedArsenal:false, usedEntrainement:false, usedDecisif:false};
+}
+function mtDraw(){
+  if(G.mt.finished) return;
+  let c;
+  if(G.mt.peek!=null){ c=G.mt.peek; G.mt.peek=null; } else { c=drawCardStars(); }
+  G.mt.total+=c;
+  G.mt.log.push(c);
+  render();
+}
+function mtStop(){ mtFinalize(); }
+function mtFinalize(){
+  if(G.mt.total>G.mt.objective){
+    if(G.mt.canArsenalSave && !G.mt.usedArsenal){ return; }
+    G.mt.finished=true; G.mt.won=false; render(); return;
+  }
+  let oppTotal=0; const log=[];
+  while(oppTotal<G.mt.oppStopAt){ const c=drawCardStars(); log.push(c); oppTotal+=c; }
+  G.mt.oppLog=log; G.mt.oppTotal=oppTotal; G.mt.finished=true;
+  if(oppTotal>G.mt.objective){ G.mt.won=true; }
+  else { G.mt.won = G.mt.total>=oppTotal; }
+  render();
+}
+function mtUseEntrainement(){
+  if(G.pa<6 || G.mt.usedEntrainement) return;
+  G.pa-=6; G.mt.usedEntrainement=true; G.mt.total+=2; render();
+}
+function mtUseDecisif(){
+  if(G.pa<8 || G.mt.usedDecisif || G.mt.finished) return;
+  G.pa-=8; G.mt.usedDecisif=true; G.mt.peek=drawCardStars(); render();
+}
+function mtUseArsenal(){
+  if(G.pa<6 || G.mt.usedArsenal) return;
+  G.pa-=6; G.mt.usedArsenal=true;
+  if(G.mt.total===G.mt.objective+1){ G.mt.total-=1; }
+  mtFinalize();
+}
+function mtContinueAfter(){
+  if(G.mt.won) goToNextRound(G.mt.round);
+  else offerSursisOrEnd(G.mt.round);
+}
+
+/* ============== DEMIES / FINALE : MISES ============== */
+function startMises(roundName){
+  G.opponent = pickOpponent(roundIndexFor(roundName));
+  G.mises = {round:roundName, invested:0, done:false, result:null, usedEntrainement:false, usedDecisif:false, usedArsenal:false, usedProlongations:false, shootout:null};
+}
+function misesInvest(val){
+  val = Math.max(0, Math.min(G.pi, parseInt(val)||0));
+  G.mises.invested = val; render();
+}
+function misesUseEntrainement(){ if(G.pa<6||G.mises.usedEntrainement) return; G.pa-=6; G.mises.usedEntrainement=true; render(); }
+function misesUseDecisif(){ if(G.pa<8||G.mises.usedDecisif) return; G.pa-=8; G.mises.usedDecisif=true; render(); }
+
+function confirmMises(){
+  let playerTotal = STAR_BONUS[G.identity.stars] + (G.mises.usedDecisif ? G.mises.invested*2 : G.mises.invested);
+  if(G.mises.usedEntrainement) playerTotal+=2;
+  const d10 = 1+Math.floor(Math.random()*10);
+  const oppTotal = STAR_BONUS[G.opponent.stars] + d10;
+  G.pi -= G.mises.invested;
+  G.mises.playerTotal=playerTotal; G.mises.oppTotal=oppTotal; G.mises.d10=d10; G.mises.done=true;
+
+  if(playerTotal>oppTotal){ G.mises.result='win'; }
+  else if(playerTotal<oppTotal){ G.mises.result='lose'; }
+  else { G.mises.result='tie'; }
+  render();
+}
+function misesUseArsenalOnLoss(){
+  if(G.pa<6||G.mises.usedArsenal) return;
+  if((G.mises.oppTotal-G.mises.playerTotal)<2){
+    G.pa-=6; G.mises.usedArsenal=true; G.mises.result='tie';
+  }
+  render();
+}
+function misesUseProlongations(){
+  if(G.pa<7||G.mises.usedProlongations) return;
+  if(Math.abs(G.identity.stars-G.opponent.stars)<=2){
+    G.pa-=7; G.mises.usedProlongations=true; G.mises.result='win';
+  }
+  render();
+}
+function playShootout(){
+  let pg=0, og=0, rounds=[];
+  while(pg===og){
+    pg=0; og=0; rounds=[];
+    for(let i=0;i<3;i++){
+      const p1=1+Math.floor(Math.random()*3), k1=1+Math.floor(Math.random()*3);
+      const goalP = p1!==k1; if(goalP) pg++;
+      const p2=1+Math.floor(Math.random()*3), k2=1+Math.floor(Math.random()*3);
+      const goalO = p2!==k2; if(goalO) og++;
+      rounds.push({goalP,goalO});
+    }
+  }
+  G.mises.shootout = {rounds, pg, og, win: pg>og};
+  G.mises.result = (pg>og) ? 'win' : 'lose';
+  render();
+}
+function misesContinueAfter(){
+  if(G.mises.result==='win') goToNextRound(G.mises.round);
+  else offerSursisOrEnd(G.mises.round);
+}
+
+/* ============== SCORE ============== */
+function computeScore(){
+  const base = ROUND_POINTS[G.furthestReached] ?? 0;
+  const paBonus = Math.floor(G.pa/3);
+  const piBonus = Math.floor(G.pi/3);
+  const starBonus = STAR_EQUITY[G.identity.stars];
+  let pariEffect = 0, pariText='—';
+  if(G.actionsUsed.pari){
+    const order2 = ['seizièmes','huitièmes','quarts','demies','finaliste','vainqueur'];
+    const reachedIdx = order2.indexOf(G.furthestReached);
+    const targetIdx = order2.indexOf(G.pariTarget);
+    pariEffect = (reachedIdx>=targetIdx) ? 10 : -5;
+    pariText = (reachedIdx>=targetIdx) ? `Pari tenu (${ROUND_LABEL[G.pariTarget]}) : +10` : `Pari manqué (visé ${ROUND_LABEL[G.pariTarget]}) : −5`;
+  }
+  const total = base+paBonus+piBonus+starBonus+pariEffect;
+  return {base,paBonus,piBonus,starBonus,pariEffect,pariText,total};
+}
+
+/* ============== RENDU ============== */
+function starsStr(n){ return "★".repeat(n)+"☆".repeat(5-n); }
+
+function renderResources(){
+  const bar = document.getElementById('resourcesBar');
+  if(!G.identity){ bar.innerHTML=''; return; }
+  bar.innerHTML = `
+    <div class="res-pill">PA <b>${G.pa}</b></div>
+    <div class="res-pill">PI <b>${G.pi}</b></div>
+    <div class="res-pill">Identité <b>${G.identity.name}</b> ${starsStr(G.identity.stars)}</div>
+    <button class="restart-btn" onclick="if(confirm('Recommencer une nouvelle partie ?')) newGame();">↺ Nouvelle partie</button>
+  `;
+}
+
+function stageTrack(){
+  const stages = [['seizièmes','16es'],['huitièmes','8es'],['quarts','1/4'],['demies','1/2'],['finale','Finale']];
+  const curIdx = ORDER.indexOf(G.stage);
+  let html = '<div class="stage-track">';
+  stages.forEach(([key,label],i)=>{
+    let cls='stage-pill';
+    if(G.stage==='eliminated' || G.stage==='score' || G.stage==='sursisOffer'){
+      const reachedIdx = ORDER.indexOf(G.pendingRound || (G.furthestReached==='vainqueur'?'finale':G.furthestReached));
+      if(i<reachedIdx || (G.furthestReached==='vainqueur')) cls+=' done';
+      else if(i===reachedIdx) cls+=' dead';
+    } else {
+      if(i<curIdx) cls+=' done';
+      else if(i===curIdx) cls+=' active';
+    }
+    html += `<div class="${cls}">${label}</div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function render(){
+  renderResources();
+  const app = document.getElementById('app');
+  app.innerHTML = renderStage();
+}
+
+function renderStage(){
+  switch(G.stage){
+    case undefined: return renderAccueil();
+    case 'setup': return renderSetup();
+    case 'poules': return renderPoules();
+    case 'postpoules': return renderPostPoules();
+    case 'seizièmes': return renderSeiziemes();
+    case 'huitièmes': case 'quarts': return renderMoneyTime();
+    case 'demies': case 'finale': return renderMises();
+    case 'sursisOffer': return renderSursisOffer();
+    case 'eliminated': return renderEliminated();
+    case 'score': return renderScore();
+    default: return '<p>...</p>';
+  }
+}
+
+function renderAccueil(){
+  return `
+  <div class="panel">
+    <h2>Bienvenue sur la pelouse</h2>
+    <p>Ceci est une adaptation jouable en solo de <b>World Cup Bluff</b>, d'après le livret officiel (section 08, variante solo).
+    Vous incarnez une nation secrète à travers la phase de poules puis l'élimination directe, face à des adversaires automatiques.</p>
+    <p class="lede">Manche 1 : bluffez avec vos cartes leurres pour qualifier ou éliminer des équipes. Manche 2 : Huitièmes et Quarts se jouent en Money Time, Demies et Finale se jouent aux mises. Vos PA et PI restants comptent dans le score final.</p>
+    <button class="btn" onclick="newGame()">Démarrer une partie</button>
+  </div>`;
+}
+
+function renderSetup(){
+  const cards = G.candidateIds.map(id=>{
+    const n = G.nations.find(x=>x.id===id);
+    return `<div class="nation-card" onclick="chooseIdentity(${id})">
+      <div class="stars">${starsStr(n.stars)}</div>
+      <div class="name">${n.name}</div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="panel">
+    <h2>Choisissez votre identité</h2>
+    <p class="lede">Vous piochez 8 cartes Nation. Choisissez celle qui sera votre nation secrète — les 7 autres deviendront vos leurres pour la Manche 1.</p>
+    <div class="grid-cards">${cards}</div>
+  </div>`;
+}
+
+function renderPoules(){
+  const groupsHtml = G.groups.map(gr=>{
+    const rows = gr.teams.slice().sort((a,b)=> b.stars-a.stars || G.fifaRankOf[a.id]-G.fifaRankOf[b.id]).map(t=>{
+      const played = getCardPlayed(t.id);
+      let cls='team-row';
+      if(played==='soutien') cls+=' green'; if(played==='sabotage') cls+=' red';
+      if(G.identity && t.id===G.identity.id) cls+=' identity';
+      const tag = played ? (played==='soutien'?' 🟢':' 🔴') : '';
+      return `<div class="${cls}">${t.name}${tag}<span class="flag-tag">${starsStr(t.stars)}</span></div>`;
+    }).join('');
+    return `<div class="group-box"><h3>Groupe ${gr.letter} <span>${gr.type==='3v1r'?'3V/1R':'2V/2R'}</span></h3>${rows}</div>`;
+  }).join('');
+
+  const hand = G.hand.map((c,i)=>{
+    const grp = G.nationGroup[c.nation.id];
+    let status = c.played==='soutien' ? '<span class="tag-soutien">Soutien joué</span>' :
+                 c.played==='sabotage' ? '<span class="tag-sabotage">Sabotage joué</span>' : '';
+    return `<div class="hand-card">
+      <div class="info">${c.nation.name} ${starsStr(c.nation.stars)}<div class="grp">Groupe ${grp.letter} — ${status||'non jouée'}</div></div>
+      <div>
+        <button class="btn small ${c.played==='soutien'?'secondary':''}" onclick="playCard(${i},'soutien')">🟢 Soutien</button>
+        <button class="btn small ${c.played==='sabotage'?'secondary':''}" onclick="playCard(${i},'sabotage')">🔴 Sabotage</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="panel">
+    <h2>Manche 1 — Phase de poules</h2>
+    <p class="lede">Votre identité secrète (<b>${G.identity.name}</b>) est cerclée d'or sur le plateau. Jouez vos 7 cartes leurres en Soutien (qualification garantie) ou Sabotage (élimination garantie), dans la limite des places de chaque groupe.</p>
+    <div class="hand-list">${hand}</div>
+    <div style="margin-top:16px;"><button class="btn" onclick="resolveAllPoules()">Résoudre les poules</button></div>
+  </div>
+  <div class="panel">
+    <h2>Les 12 groupes</h2>
+    <div class="groups-grid">${groupsHtml}</div>
+  </div>`;
+}
+
+function renderPostPoules(){
+  const others = G.qualified.filter(n=>n.id!==G.identity.id);
+  const coupBasOptions = G.actionsUsed.coupBas ? '' : `
+    <div style="margin-top:10px;">
+      <p class="lede">Coup Bas (gratuit, 1×) : retirez une nation qualifiée adverse du vivier d'adversaires — elle ne pourra plus vous être opposée dans le tournoi.</p>
+      <select id="coupBasSelect" style="padding:6px;border-radius:6px;">
+        ${others.map(n=>`<option value="${n.id}">${n.name} ${starsStr(n.stars)}</option>`).join('')}
+      </select>
+      <button class="btn small" onclick="useCoupBas(parseInt(document.getElementById('coupBasSelect').value))">Jouer Coup Bas</button>
+    </div>`;
+  const pariOptions = G.actionsUsed.pari ? `<p class="lede">Pari déjà engagé : ${ROUND_LABEL[G.pariTarget]}.</p>` : `
+    <div style="margin-top:10px;">
+      <p class="lede">Pari (gratuit, 1×) : annoncez jusqu'où vous pensez emmener votre nation. Si vous atteignez ce tour ou mieux : +10 au score final. Sinon : −5.</p>
+      <select id="pariSelect" style="padding:6px;border-radius:6px;">
+        <option value="seizièmes">Seizièmes</option>
+        <option value="huitièmes">Huitièmes</option>
+        <option value="quarts">Quarts</option>
+        <option value="demies">Demies</option>
+        <option value="finaliste">Finaliste</option>
+        <option value="vainqueur">Vainqueur</option>
+      </select>
+      <button class="btn small" onclick="setPari(document.getElementById('pariSelect').value)">Faire mon Pari</button>
+    </div>`;
+  return `
+  <div class="panel">
+    <h2>Votre nation est qualifiée !</h2>
+    <p><b>${G.identity.name}</b> ${starsStr(G.identity.stars)} passe en Manche 2, aux côtés de 31 autres nations.</p>
+    ${coupBasOptions}
+    ${pariOptions}
+    <div style="margin-top:16px;"><button class="btn" onclick="startRound('seizièmes')">Passer aux Seizièmes de finale →</button></div>
+  </div>`;
+}
+
+function renderSeiziemes(){
+  let duelHtml = '';
+  if(!G.duel){
+    duelHtml = `<p class="lede">Piochez une carte pour chaque nation : le total étoiles + carte le plus élevé qualifie.</p>
+    <button class="btn" onclick="playSeiziemes()">Piocher les cartes</button>`;
+  } else {
+    duelHtml = `
+    <div class="vs-row">
+      <div class="vs-side"><div class="who">Vous</div><div class="nm">${G.identity.name} ${starsStr(G.identity.stars)}</div>
+        <div class="tot">${G.identity.stars} + ${G.duel.idCard} = ${G.duel.idTotal}</div></div>
+      <div class="vs-mid">VS</div>
+      <div class="vs-side"><div class="who">Adversaire</div><div class="nm">${G.opponent.name} ${starsStr(G.opponent.stars)}</div>
+        <div class="tot">${G.opponent.stars} + ${G.duel.oppCard} = ${G.duel.oppTotal}</div></div>
+    </div>
+    <p style="font-size:1.1rem;">${G.duel.win ? '🟢 Vous êtes qualifié pour les Huitièmes !' : '🔴 Votre nation est éliminée.'}</p>
+    <button class="btn" onclick="afterSeiziemes()">Continuer</button>`;
+  }
+  return `<div class="panel">${stageTrack()}<h2>Seizièmes de finale — Tirage au sort</h2>${duelHtml}</div>`;
+}
+
+function renderMoneyTime(){
+  const m = G.mt;
+  const pct = Math.min(100, Math.round(m.total/m.objective*100));
+  const over = m.total>m.objective;
+  const roundLabel = m.round==='huitièmes'?'Huitièmes de finale':'Quarts de finale';
+
+  let bustHtml = '';
+  const canOfferArsenal = over && m.total===m.objective+1 && !m.usedArsenal && G.pa>=6;
+  if(over && !m.finished){
+    if(canOfferArsenal){
+      bustHtml = `<p style="color:var(--red);">Dépassement d'1 point !</p>
+      <button class="btn danger small" onclick="mtUseArsenal()">🛡 Défense d'Arsenal (6 PA) — annuler le dépassement</button>
+      <button class="btn secondary small" onclick="mtFinalize()">Accepter l'élimination</button>`;
+    } else {
+      bustHtml = `<p style="color:var(--red);">Vous avez dépassé l'objectif (${m.objective}) : élimination immédiate.</p>
+      <button class="btn" onclick="mtFinalize()">Voir le résultat</button>`;
+    }
+  }
+
+  let resultHtml = '';
+  if(m.finished){
+    resultHtml = `
+    <div class="vs-row">
+      <div class="vs-side"><div class="who">Vous</div><div class="tot">${m.total}</div>
+        <div class="lede">tirages : ${m.log.join(', ')}</div></div>
+      <div class="vs-mid">VS objectif ${m.objective}</div>
+      <div class="vs-side"><div class="who">${G.opponent.name}</div><div class="tot">${m.oppTotal}</div>
+        <div class="lede">tirages : ${m.oppLog.join(', ')}</div></div>
+    </div>
+    <p style="font-size:1.1rem;">${m.won ? '🟢 Vous passez au tour suivant !' : '🔴 Votre nation est éliminée.'}</p>
+    <button class="btn" onclick="mtContinueAfter()">Continuer</button>`;
+  }
+
+  let actionsHtml = '';
+  if(!m.finished){
+    actionsHtml = `<div class="action-bar">
+      <button class="action-btn" ${m.usedEntrainement||G.pa<6?'disabled':''} onclick="mtUseEntrainement()"><b>Entraînement intensif (6 PA)</b>+2 au total sans tirer</button>
+      <button class="action-btn" ${m.usedDecisif||G.pa<8?'disabled':''} onclick="mtUseDecisif()"><b>Joueur décisif (8 PA)</b>Révèle la prochaine carte</button>
+    </div>`;
+  }
+
+  return `<div class="panel">${stageTrack()}
+    <h2>${roundLabel} — Money Time</h2>
+    <p class="lede">Adversaire : <b>${G.opponent.name}</b> ${starsStr(G.opponent.stars)}. Objectif : ne pas dépasser ${m.objective} points d'étoiles cumulés (l'adversaire tire jusqu'à ${m.oppStopAt}).</p>
+    <div class="money-chip">Total : ${m.total} / ${m.objective}</div>
+    <div class="objective-bar"><div class="objective-fill ${over?'over':''}" style="width:${pct}%"></div></div>
+    ${m.log.length? `<p class="log-line">Cartes tirées : ${m.log.join(', ')}</p>`:''}
+    ${m.peek!=null ? `<p class="log-line">Prochaine carte visible : <b>${m.peek}</b></p>`:''}
+    ${!m.finished && !over ? `<button class="btn" onclick="mtDraw()">Tirer une carte</button><button class="btn secondary" onclick="mtStop()">S'arrêter</button>`:''}
+    ${bustHtml}
+    ${resultHtml}
+    ${actionsHtml}
+  </div>`;
+}
+
+function renderMises(){
+  const m = G.mises;
+  const roundLabel = m.round==='demies' ? 'Demi-finale' : 'Finale';
+  if(!m.done){
+    const bonusText = STAR_BONUS[G.identity.stars];
+    return `<div class="panel">${stageTrack()}
+      <h2>${roundLabel} — Mise secrète</h2>
+      <p class="lede">Adversaire : <b>${G.opponent.name}</b> ${starsStr(G.opponent.stars)}. Investissez vos PI (bonus étoiles de votre nation : +${bonusText}). L'adversaire ne mise rien mais lance un d10.</p>
+      <div class="invest-display">${m.invested} PI investis</div>
+      <input type="range" min="0" max="${G.pi}" value="${m.invested}" oninput="misesInvest(this.value)">
+      <div class="action-bar">
+        <button class="action-btn" ${m.usedEntrainement||G.pa<6?'disabled':''} onclick="misesUseEntrainement()"><b>Entraînement intensif (6 PA)</b>+2 au total pour ce match</button>
+        <button class="action-btn" ${m.usedDecisif||G.pa<8?'disabled':''} onclick="misesUseDecisif()"><b>Joueur décisif (8 PA)</b>Vos PI investis comptent double</button>
+      </div>
+      <div style="margin-top:14px;"><button class="btn" onclick="confirmMises()">Valider ma mise</button></div>
+    </div>`;
+  }
+
+  let midOutcome = '';
+  if(m.result==='lose'){
+    const canArsenal = (m.oppTotal-m.playerTotal)<2 && !m.usedArsenal && G.pa>=6;
+    midOutcome = `<p style="color:var(--red);">Défaite ${m.playerTotal} — ${m.oppTotal}.</p>`;
+    if(canArsenal) midOutcome += `<button class="btn danger small" onclick="misesUseArsenalOnLoss()">🛡 Défense d'Arsenal (6 PA) — transformer en match nul</button>`;
+    midOutcome += `<div style="margin-top:8px;"><button class="btn" onclick="misesContinueAfter()">Voir le résultat final</button></div>`;
+  } else if(m.result==='win'){
+    midOutcome = `<p style="color:var(--green);">Victoire ${m.playerTotal} — ${m.oppTotal} ! Vous passez au tour suivant.</p>
+      <button class="btn" onclick="misesContinueAfter()">Continuer</button>`;
+  } else if(m.result==='tie'){
+    const canProlong = Math.abs(G.identity.stars-G.opponent.stars)<=2 && !m.usedProlongations && G.pa>=7;
+    midOutcome = `<p>Égalité ${m.playerTotal} — ${m.oppTotal}.</p>`;
+    if(canProlong) midOutcome += `<button class="btn small" onclick="misesUseProlongations()">⏱ Prolongations (7 PA) — victoire automatique</button>`;
+    if(!m.shootout) midOutcome += `<div style="margin-top:8px;"><button class="btn" onclick="playShootout()">Tirs au but</button></div>`;
+    if(m.shootout){
+      midOutcome += `<div class="panel" style="margin-top:10px;background:#0a2318;">
+        <p>Score tirs au but : Vous ${m.shootout.pg} — ${m.shootout.og} Adversaire</p>
+        <p style="font-size:1.1rem;">${m.shootout.win?'🟢 Vous gagnez la séance de tirs au but !':'🔴 Défaite aux tirs au but.'}</p>
+        <button class="btn" onclick="misesContinueAfter()">Continuer</button>
+      </div>`;
+    }
+  }
+
+  return `<div class="panel">${stageTrack()}
+    <h2>${roundLabel} — Résultat</h2>
+    <div class="vs-row">
+      <div class="vs-side"><div class="who">Vous</div><div class="nm">${G.identity.name}</div><div class="tot">${m.playerTotal}</div></div>
+      <div class="vs-mid">VS</div>
+      <div class="vs-side"><div class="who">${G.opponent.name}</div><div class="nm">d10 = ${m.d10}</div><div class="tot">${m.oppTotal}</div></div>
+    </div>
+    ${midOutcome}
+  </div>`;
+}
+
+function renderSursisOffer(){
+  return `<div class="panel">${stageTrack()}
+    <h2>Élimination à ${ROUND_LABEL[G.pendingRound]}</h2>
+    <p>Votre nation vient de perdre. Vous pouvez jouer <b>Sursis</b> (10 PA, 1×/partie) pour la sauver et continuer le tournoi.</p>
+    <button class="btn" ${G.pa<10?'disabled':''} onclick="useSursis()">🚑 Jouer Sursis (10 PA)</button>
+    <button class="btn secondary" onclick="declineSursis()">Accepter l'élimination</button>
+  </div>`;
+}
+
+function renderEliminated(){
+  return `<div class="panel">${stageTrack()}
+    <h2>Fin du parcours</h2>
+    <p><b>${G.identity.name}</b> est éliminée — parcours arrêté au stade : <b>${ROUND_LABEL[G.furthestReached] || 'Phase de poules'}</b>.</p>
+    <button class="btn" onclick="G.stage='score';render();">Voir le score final →</button>
+  </div>`;
+}
+
+function renderScore(){
+  const s = computeScore();
+  return `<div class="panel">
+    <h2>Score final</h2>
+    <p>Nation : <b>${G.identity.name}</b> ${starsStr(G.identity.stars)} — Parcours : <b>${ROUND_LABEL[G.furthestReached] || 'Phase de poules'}</b></p>
+    <table class="score-table">
+      <tr><th>Élément</th><th></th></tr>
+      <tr><td>Parcours (${ROUND_LABEL[G.furthestReached] || 'Poules'})</td><td class="num">${s.base}</td></tr>
+      <tr><td>PA non dépensés (${G.pa}, par tranche de 3)</td><td class="num">+${s.paBonus}</td></tr>
+      <tr><td>PI non dépensés (${G.pi}, par tranche de 3)</td><td class="num">+${s.piBonus}</td></tr>
+      <tr><td>Bonus d'équité (${starsStr(G.identity.stars)})</td><td class="num">+${s.starBonus}</td></tr>
+      <tr><td>Pari — ${s.pariText}</td><td class="num">${s.pariEffect>=0?'+':''}${s.pariEffect}</td></tr>
+      <tr class="score-total"><td>Total</td><td class="num">${s.total}</td></tr>
+    </table>
+    <div style="margin-top:18px;"><button class="btn" onclick="newGame()">Rejouer une partie</button></div>
+  </div>`;
+}
+
+/* init */
+render();
+</script>
+</body>
+</html>
